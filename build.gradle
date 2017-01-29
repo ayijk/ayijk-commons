@@ -161,8 +161,8 @@ publishing {
     publications {
         MyPublication(MavenPublication) {
             from components.java
-            artifact sourcesJar
-            artifact javadocJar
+            //artifact sourcesJar
+            //artifact javadocJar
             groupId "${this.project.group}"
             artifactId "${this.project.name}"
             version project.version
@@ -212,5 +212,5 @@ dependencies {
 }
 
 shadowJar {
-    classifier = "shadowjar"
+    archiveName = "${this.project.name}-shadowjar-${this.project.version}.${extension}"
 }

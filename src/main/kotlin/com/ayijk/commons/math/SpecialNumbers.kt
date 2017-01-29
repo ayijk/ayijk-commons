@@ -53,7 +53,7 @@ object SpecialNumbers {
       val b = fact(m - 1)
       val c = (0..(n - m)).map { k ->
         val d = (0..k).map { j ->
-          Math.pow(-1, j) * BigDecimal(j).pow(n - m + k) / (fact(j) * fact(k - j))
+          Maths.pow(-1, j).toInt() * Maths.bigDecimalPow(j, n - m + k) / (fact(j) * fact(k - j))
         }.sum
         d / ((n + k) * fact(n - m - k) * fact(n - m + k))
       }.sum
@@ -70,9 +70,8 @@ object SpecialNumbers {
    */
   fun stirlingNumber2nd(n: Int, m: Int): BigInteger {
     val a = (0..m).map { j ->
-      Math.pow(-1, j).toInt() * combination(m, j) * BigDecimal(j).pow(n)
+      Maths.pow(-1, j).toInt() * combination(m, j) * Maths.bigIntegerPow(j, n)
     }.sum
-    val b = a.setScale(0, BigDecimal.ROUND_HALF_UP).toBigInteger().abs()
-    return b / fact(m)
+    return a / fact(m)
   }
 }
