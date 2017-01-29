@@ -1,0 +1,208 @@
+import org.ajoberstar.grgit.*
+import org.ajoberstar.grgit.operation.OpenOp
+import org.ajoberstar.grgit.operation.StatusOp
+
+group 'com.ayijk.commons'
+version getVersionCode()
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${version_kotlin}"
+        classpath "com.github.jengelman.gradle.plugins:shadow:1.2.4"
+        classpath 'org.ajoberstar:gradle-git:1.6.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    }
+}
+
+apply plugin: 'kotlin'
+
+apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${version_kotlin}"
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+shadowJar {
+    classifier = "shadowjar"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+}
+
+/**
+ * publishPluginsの前に，
+ * ・masterブランチであるか
+ * ・GitのステータスがClean（すべてコミット済み）であるか
+ * ・remoteが存在するか
+ * ・Pushされているか
+ * を確認するためのタスク
+ */
+task checkGitStatus << {
+    // masterブランチであるかチェック
+    def OpenOp op = new OpenOp()
+    op.setDir(rootDir)
+    def Grgit git = op.call()
+    def Branch currentBranch = git.branch.current
+    if (currentBranch.name != 'master') {
+        //throw new GradleException("You should checkout 'master' branch, but you're in ${currentBranch.name}.")
+    }
+
+    // Un committed filesがないかチェック
+    def Repository repo = git.repository
+    def Status status = new StatusOp(repo).call()
+    if (!status.isClean()) {
+        throw new GradleException('There are uncommitted files.');
+    }
+
+    // remoteブランチが存在するかどうかチェック
+    def Branch remoteBranch = currentBranch.trackingBranch
+    if (remoteBranch == null) {
+        throw new GradleException('There might be no remote branch.')
+    }
+
+    // remoteにPushされているかチェック
+    def List<Commit> log = git.log { range remoteBranch.name, currentBranch.name }
+    if (log.size() > 0) {
+        throw new GradleException("There are ${log.size()} unpushed commits.")
+    }
+
+    println 'OK, you are ready to publish this project !!'
+}
+
+tasks.bintrayUpload.dependsOn tasks.checkGitStatus
+tasks.bintrayUpload.dependsOn tasks.build
+
+/**
+ * maven installの設定
+ */
+install.doFirst {
+    def dir = new File(System.getProperty('user.home'), '.gradle/cache/com.ayijk').absolutePath
+    if (new File(dir).exists()) {
+        ant.echo("Remove gradle-cache-dir : ${dir}")
+        ant.delete(dir: dir)
+    }
+}
+
+/**
+ * installタスク終了後にバージョンコードを出力する．
+ */
+gradle.taskGraph.afterTask { Task task, TaskState state ->
+    if (task.name == 'install') {
+        tasks.showInformation.execute()
+    }
+}
+
+/**
+ * このPluginが管理されているリポジトリの情報から，バージョンコードを出力する．
+ * [master branch]
+ * タグ名をバージョンコードとして返す．
+ *
+ * [other branches]
+ * ${branchName}-${hash}をバージョンコードとして返す．
+ * 未コミットなファイルが残っている場合，末尾に"-unclean"が追記される．
+ *
+ * @return このPluginのバージョンコード
+ */
+String getVersionCode() {
+    OpenOp op = new OpenOp()
+    op.setDir(project.rootDir)
+    try {
+        Grgit repo = op.call()
+        String currentBranchName = repo.branch.current.name.replace("/", "-")
+        if (currentBranchName == 'master') {
+            List<Tag> tags = repo.tag.list().findAll { it.commit == repo.head() }
+            if (tags.size() == 0) {
+                throw new GradleException("You should make a tag for this commit.")
+            }
+
+            String tag = tags[0].name
+            return tag
+        } else {
+            String hash = repo.head().id.subSequence(0, 7)
+            Status status = new StatusOp(repo.repository).call()
+
+            String versionCode = "${currentBranchName}-${hash}" + (status.clean ? "" : "-unclean")
+            return versionCode
+        }
+    } catch (Exception e) {
+        throw new GradleException(e.message)
+    }
+}
+
+/**
+ * このPluginのバージョンコードを出力するタスク
+ */
+task showInformation << {
+    println "The information of this project is as follows:"
+    println "\tgroupId:    \"${this.project.group}\""
+    println "\tartifactId: \"${this.project.name}\""
+    println "\tversion:    \"${this.project.version}\""
+}
+
+bintray {
+    user = "${bintray_user}"
+    key = "${bintray_apikey}"
+    publications = ['MyPublication']
+
+    pkg {
+        repo = 'maven'
+        name = "${this.project.name}"
+        licenses = ["MIT"]
+        githubRepo = "ayijk/ayijk-commons"
+        githubReleaseNotesFile = 'README.md'
+        websiteUrl = "https://github.com/${githubRepo}"
+        issueTrackerUrl = "https://github.com/${githubRepo}/issues"
+        vcsUrl = "https://github.com/${githubRepo}.git"
+        version {
+            name = "${this.project.version}"
+            desc = ""
+            released = new Date()
+            vcsTag = "${this.project.version}"
+            //attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+        }
+    }
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId "${this.project.group}"
+            artifactId "${this.project.name}"
+            version project.version
+        }
+    }
+}
