@@ -30,20 +30,9 @@ apply plugin: 'com.jfrog.bintray'
 
 sourceCompatibility = 1.7
 
-repositories {
-    mavenCentral()
-    jcenter()
-}
-
-dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${version_kotlin}"
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-}
-
-shadowJar {
-    classifier = "shadowjar"
-}
-
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// bintrayUpload
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
@@ -61,70 +50,17 @@ artifacts {
 }
 
 /**
- * publishPluginsの前に，
- * ・masterブランチであるか
- * ・GitのステータスがClean（すべてコミット済み）であるか
- * ・remoteが存在するか
- * ・Pushされているか
- * を確認するためのタスク
+ * このPluginのバージョンコードを出力するタスク
  */
-task checkGitStatus << {
-    // masterブランチであるかチェック
-    def OpenOp op = new OpenOp()
-    op.setDir(rootDir)
-    def Grgit git = op.call()
-    def Branch currentBranch = git.branch.current
-    if (currentBranch.name != 'master') {
-        //throw new GradleException("You should checkout 'master' branch, but you're in ${currentBranch.name}.")
-    }
-
-    // Un committed filesがないかチェック
-    def Repository repo = git.repository
-    def Status status = new StatusOp(repo).call()
-    if (!status.isClean()) {
-        throw new GradleException('There are uncommitted files.');
-    }
-
-    // remoteブランチが存在するかどうかチェック
-    def Branch remoteBranch = currentBranch.trackingBranch
-    if (remoteBranch == null) {
-        throw new GradleException('There might be no remote branch.')
-    }
-
-    // remoteにPushされているかチェック
-    def List<Commit> log = git.log { range remoteBranch.name, currentBranch.name }
-    if (log.size() > 0) {
-        throw new GradleException("There are ${log.size()} unpushed commits.")
-    }
-
-    println 'OK, you are ready to publish this project !!'
-}
-
-tasks.bintrayUpload.dependsOn tasks.checkGitStatus
-tasks.bintrayUpload.dependsOn tasks.build
-
-/**
- * maven installの設定
- */
-install.doFirst {
-    def dir = new File(System.getProperty('user.home'), '.gradle/cache/com.ayijk').absolutePath
-    if (new File(dir).exists()) {
-        ant.echo("Remove gradle-cache-dir : ${dir}")
-        ant.delete(dir: dir)
-    }
+task showInformation << {
+    println "The information of this project is as follows:"
+    println "\tgroupId:    \"${this.project.group}\""
+    println "\tartifactId: \"${this.project.name}\""
+    println "\tversion:    \"${this.project.version}\""
 }
 
 /**
- * installタスク終了後にバージョンコードを出力する．
- */
-gradle.taskGraph.afterTask { Task task, TaskState state ->
-    if (task.name == 'install') {
-        tasks.showInformation.execute()
-    }
-}
-
-/**
- * このPluginが管理されているリポジトリの情報から，バージョンコードを出力する．
+ * リポジトリの情報から，バージョンコードを出力する．
  * [master branch]
  * タグ名をバージョンコードとして返す．
  *
@@ -132,7 +68,7 @@ gradle.taskGraph.afterTask { Task task, TaskState state ->
  * ${branchName}-${hash}をバージョンコードとして返す．
  * 未コミットなファイルが残っている場合，末尾に"-unclean"が追記される．
  *
- * @return このPluginのバージョンコード
+ * @return バージョンコード
  */
 String getVersionCode() {
     OpenOp op = new OpenOp()
@@ -161,13 +97,77 @@ String getVersionCode() {
 }
 
 /**
- * このPluginのバージョンコードを出力するタスク
+ * ・masterブランチであるか
+ * ・GitのステータスがClean（すべてコミット済み）であるか
+ * ・remoteが存在するか
+ * ・Pushされているか
+ * を確認するためのタスク
  */
-task showInformation << {
-    println "The information of this project is as follows:"
-    println "\tgroupId:    \"${this.project.group}\""
-    println "\tartifactId: \"${this.project.name}\""
-    println "\tversion:    \"${this.project.version}\""
+task checkGitStatus << {
+    // masterブランチであるかチェック
+    OpenOp op = new OpenOp()
+    op.setDir(rootDir)
+    Grgit git = op.call()
+    Branch currentBranch = git.branch.current
+    /*
+    if (currentBranch.name != 'master') {
+        throw new GradleException("You should checkout 'master' branch, but you're in ${currentBranch.name}.")
+    }
+    */
+
+    // Un committed filesがないかチェック
+    Repository repo = git.repository
+    Status status = new StatusOp(repo).call()
+    if (!status.isClean()) {
+        throw new GradleException('There are uncommitted files.');
+    }
+
+    // remoteブランチが存在するかどうかチェック
+    Branch remoteBranch = currentBranch.trackingBranch
+    if (remoteBranch == null) {
+        throw new GradleException('There might be no remote branch.')
+    }
+
+    // remoteにPushされているかチェック
+    List<Commit> log = git.log { range remoteBranch.name, currentBranch.name }
+    if (log.size() > 0) {
+        throw new GradleException("There are ${log.size()} unpushed commits.")
+    }
+
+    println 'OK, you are ready to publish this project !!'
+}
+
+/**
+ * maven installの設定
+ */
+install.doFirst {
+    def dir = new File(System.getProperty('user.home'), '.gradle/cache/com.ayijk').absolutePath
+    if (new File(dir).exists()) {
+        ant.echo("Remove gradle-cache-dir : ${dir}")
+        ant.delete(dir: dir)
+    }
+}
+
+/**
+ * installタスク終了後にバージョンコードを出力する．
+ */
+gradle.taskGraph.afterTask { Task task, TaskState state ->
+    if (task.name == 'install') {
+        tasks.showInformation.execute()
+    }
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId "${this.project.group}"
+            artifactId "${this.project.name}"
+            version project.version
+        }
+    }
 }
 
 bintray {
@@ -194,15 +194,23 @@ bintray {
     }
 }
 
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-            groupId "${this.project.group}"
-            artifactId "${this.project.name}"
-            version project.version
-        }
-    }
+tasks.bintrayUpload.dependsOn tasks.checkGitStatus
+tasks.bintrayUpload.dependsOn tasks.build
+tasks.bintrayUpload.dependsOn tasks.test
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// bintrayUpload
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${version_kotlin}"
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+shadowJar {
+    classifier = "shadowjar"
 }
