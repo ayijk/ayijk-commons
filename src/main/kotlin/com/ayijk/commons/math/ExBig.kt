@@ -10,6 +10,10 @@ import java.math.MathContext
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // BigInteger
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+fun BigInteger(value: Int): BigInteger {
+  return BigInteger.valueOf(value.toLong())
+}
+
 operator fun BigInteger.plus(another: BigInteger): BigInteger {
   return this.add(another)
 }
