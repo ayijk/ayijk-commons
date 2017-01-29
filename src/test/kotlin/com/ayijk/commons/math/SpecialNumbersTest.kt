@@ -2,6 +2,7 @@ package com.ayijk.commons.math
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.math.BigInteger
 
 /**
  * Created by ayijk on 2017/01/28.
@@ -16,9 +17,32 @@ class SpecialNumbersTest {
   }
 
   @Test
+  fun permutationTest() {
+    assertEquals(BigInteger("1"), SpecialNumbers.permutation(0, 0))
+    assertEquals(BigInteger("2"), SpecialNumbers.permutation(2, 1))
+    assertEquals(BigInteger("8450550186924629495838157093855404565441366722012461965560414732385728621597296137876420884621412468214583850753160522570648517967532382305454834505647607520427964189812887040005874546880020480000000000000000000000000"),
+        SpecialNumbers.permutation(200, 100))
+  }
+
+  @Test
+  fun combinationTest() {
+    assertEquals(BigInteger("1"), SpecialNumbers.combination(0, 0))
+    assertEquals(BigInteger("2"), SpecialNumbers.combination(2, 1))
+    assertEquals(BigInteger("90548514656103281165404177077484163874504589675413336841320"),
+        SpecialNumbers.combination(200, 100))
+  }
+
+  @Test
   fun stirlingNumber1stTest() {
-    assertEquals(1, SpecialNumbers.stirlingNumber1st(0, 0).toLong())
-    assertEquals(1764, SpecialNumbers.stirlingNumber1st(7, 2).toLong())
-    assertEquals(6634460278534540725, SpecialNumbers.stirlingNumber1st(30, 20).toLong())
+    assertEquals(BigInteger("1"), SpecialNumbers.stirlingNumber1st(0, 0))
+    assertEquals(BigInteger("1764"), SpecialNumbers.stirlingNumber1st(7, 2))
+    assertEquals(BigInteger("6634460278534540725"), SpecialNumbers.stirlingNumber1st(30, 20))
+  }
+
+  @Test
+  fun stirlingNumber2ndTest() {
+    assertEquals(BigInteger("1"), SpecialNumbers.stirlingNumber2nd(0, 0))
+    assertEquals(BigInteger("63"), SpecialNumbers.stirlingNumber2nd(7, 2))
+    assertEquals(BigInteger("581535955088511150"), SpecialNumbers.stirlingNumber2nd(30, 20))
   }
 }

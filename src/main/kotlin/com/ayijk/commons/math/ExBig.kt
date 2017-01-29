@@ -48,6 +48,18 @@ operator fun BigInteger.times(another: Int): BigInteger {
   return times(another.toLong())
 }
 
+operator fun BigInteger.div(another: BigInteger): BigInteger {
+  return this.divide(another)
+}
+
+operator fun BigInteger.div(another: Long): BigInteger {
+  return div(another.toBigInteger())
+}
+
+operator fun BigInteger.div(another: Int): BigInteger {
+  return div(another.toLong())
+}
+
 val Iterable<BigInteger>.sum: BigInteger
   get() {
     return this.reduce { it1, it2 -> it1 + it2 }

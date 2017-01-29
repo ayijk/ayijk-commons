@@ -12,12 +12,30 @@ object SpecialNumbers {
   tailrec fun fact(n: Int, f: BigInteger = BigInteger.ONE): BigInteger {
     return when (n) {
       0 -> f
-      else -> fact(n - 1, f * n)
+      else -> fact(n - 1, n * f)
     }
   }
 
   /**
-   * http://mathoverflow.net/questions/72854/stirling-number-of-first-kind-implementation
+   * nPk
+   */
+  fun permutation(n: Int, k: Int): BigInteger {
+    require(n >= 0 && k >= 0 && n >= k, {
+      "n:$n, k:$k"
+    })
+
+    return fact(n) / fact(n - k)
+  }
+
+  /**
+   * nCk
+   */
+  fun combination(n: Int, k: Int): BigInteger {
+    return permutation(n, k) / fact(k)
+  }
+
+  /**
+   * https://fr.wikipedia.org/wiki/Nombre_de_Stirling#Formules_explicites
    */
   fun stirlingNumber1st(n: Int, m: Int): BigInteger {
     require(n >= 0 && m >= 0, {
@@ -45,5 +63,16 @@ object SpecialNumbers {
 
       return ret
     }
+  }
+
+  /**
+   * https://fr.wikipedia.org/wiki/Nombre_de_Stirling#Formule_explicite
+   */
+  fun stirlingNumber2nd(n: Int, m: Int): BigInteger {
+    val a = (0..m).map { j ->
+      Math.pow(-1, j).toInt() * combination(m, j) * BigDecimal(j).pow(n)
+    }.sum
+    val b = a.setScale(0, BigDecimal.ROUND_HALF_UP).toBigInteger().abs()
+    return b / fact(m)
   }
 }
