@@ -137,4 +137,36 @@ class DenseMatrixTest {
 
     assertEquals(m1 * m2, dm1 * dm2)
   }
+  @Test
+  fun detTest() {
+    val dm1 = DenseMatrix(2, 2)
+    dm1[0, 0] = 2
+    dm1[0, 1] = 1
+    dm1[1, 0] = 6
+    dm1[1, 1] = 3
+
+    assertEquals(0, dm1.det())
+
+    val dm2 = DenseMatrix(2, 2)
+    dm2[0, 0] = 2
+    dm2[0, 1] = 1
+    dm2[1, 0] = 6
+    dm2[1, 1] = 0
+
+    assertEquals(-6, dm2.det())
+
+    val dm3 = DenseMatrix(3, 3)
+    dm3[0, 0] = 1
+    dm3[0, 1] = 2
+    dm3[0, 2] = -1
+    dm3[1, 0] = 10
+    dm3[1, 1] = 3
+    dm3[1, 2] = 4
+    dm3[2, 0] = -5
+    dm3[2, 1] = 2
+    dm3[2, 2] = 3
+
+
+    assertEquals(-134, dm3.det())
+  }
 }

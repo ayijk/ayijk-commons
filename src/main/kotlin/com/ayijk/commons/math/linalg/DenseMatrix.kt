@@ -382,6 +382,30 @@ class DenseMatrix {
     return ret
   }
 
+  @TestDone
+  fun det(): Double {
+    require(size.isSquare(), {
+      "This matrix should be square, but actually ${size.rows} x ${size.cols}"
+    })
+
+    val n = size.rows
+    val copy = this.copy()
+    var buf: Double
+
+    for (i in 0 until n) {
+      for (j in 0 until n) {
+        if (i < j) {
+          buf = copy[j, i] / copy[i, i]
+          for (k in 0 until n) {
+            copy[j, k] -= (copy[i, k] * buf)
+          }
+        }
+      }
+    }
+
+    val det = (0 until n).map { copy[it, it] }.reduce { d1, d2 -> d1 * d2 }
+    return det
+  }
   fun inv(): DenseMatrix {
     return this
   }
