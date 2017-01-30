@@ -208,7 +208,9 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:${version_kotlin}"
+
     testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile group: 'gov.nist.math', name: 'jama', version: '1.0.3'
 }
 
 shadowJar {
