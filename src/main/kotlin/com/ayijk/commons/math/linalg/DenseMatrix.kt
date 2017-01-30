@@ -342,10 +342,6 @@ class DenseMatrix {
     return ret
   }
 
-  infix fun `*`(another: DenseMatrix): DenseMatrix {
-    return this.timesByElement(another)
-  }
-
   @TestYet
   fun timesAssignByElement(another: DenseMatrix): Unit {
     checkSize(size, another.size, Operator.Same)
@@ -355,10 +351,6 @@ class DenseMatrix {
       val j = it.second
       this[i, j] *= another[i, j]
     }
-  }
-
-  infix fun `*=`(another: DenseMatrix): Unit {
-    this.timesAssignByElement(another)
   }
 
   fun divByElement(another: DenseMatrix): DenseMatrix {
@@ -372,10 +364,6 @@ class DenseMatrix {
     }
 
     return ret
-  }
-
-  infix fun `--`(another: DenseMatrix): DenseMatrix {
-    return this.divByElement(another)
   }
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   // math operation
