@@ -1,5 +1,6 @@
 package com.ayijk.commons.math
 
+import com.ayijk.commons.test.TestDone
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -9,6 +10,7 @@ import java.math.BigInteger
  */
 object SpecialNumbers {
 
+  @TestDone
   tailrec fun fact(n: Int, f: BigInteger = BigInteger.ONE): BigInteger {
     return when (n) {
       0 -> f
@@ -19,6 +21,7 @@ object SpecialNumbers {
   /**
    * nPk
    */
+  @TestDone
   fun permutation(n: Int, k: Int): BigInteger {
     require(n >= 0 && k >= 0 && n >= k, {
       "n:$n, k:$k"
@@ -30,6 +33,7 @@ object SpecialNumbers {
   /**
    * nCk
    */
+  @TestDone
   fun combination(n: Int, k: Int): BigInteger {
     return permutation(n, k) / fact(k)
   }
@@ -37,6 +41,7 @@ object SpecialNumbers {
   /**
    * https://fr.wikipedia.org/wiki/Nombre_de_Stirling#Formules_explicites
    */
+  @TestDone
   fun stirlingNumber1st(n: Int, m: Int): BigInteger {
     require(n >= 0 && m >= 0, {
       "the arguments 'n' and 'm' should be positive, but actually are n:$n, m:$m"
@@ -68,6 +73,7 @@ object SpecialNumbers {
   /**
    * https://fr.wikipedia.org/wiki/Nombre_de_Stirling#Formule_explicite
    */
+  @TestDone
   fun stirlingNumber2nd(n: Int, m: Int): BigInteger {
     val a = (0..m).map { j ->
       Maths.pow(-1, j).toInt() * combination(m, j) * Maths.bigIntegerPow(j, n)

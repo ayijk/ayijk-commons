@@ -9,10 +9,10 @@ import org.junit.Test
 class SpecialNumbersTest {
   @Test
   fun factTest() {
-    assertEquals(1, SpecialNumbers.fact(0).toLong())
-    assertEquals(1, SpecialNumbers.fact(1).toLong())
-    assertEquals(2, SpecialNumbers.fact(2).toLong())
-    assertEquals(3628800, SpecialNumbers.fact(10).toLong())
+    assertEquals(1, SpecialNumbers.fact(0))
+    assertEquals(1, SpecialNumbers.fact(1))
+    assertEquals(2, SpecialNumbers.fact(2))
+    assertEquals(3628800, SpecialNumbers.fact(10))
   }
 
   @Test
