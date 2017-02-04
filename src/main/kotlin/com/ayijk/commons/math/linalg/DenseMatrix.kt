@@ -1,5 +1,9 @@
 package com.ayijk.commons.math.linalg
 
+import com.ayijk.commons.math.linalg.dec.EigenValueDecomposition
+import com.ayijk.commons.math.linalg.dec.LUDecomposition
+import com.ayijk.commons.math.linalg.dec.QRDecomposition
+import com.ayijk.commons.math.linalg.dec.SingularValueDecomposition
 import com.ayijk.commons.test.TestDone
 import com.ayijk.commons.test.TestYet
 import com.ayijk.commons.util.plusAssign
@@ -18,6 +22,42 @@ class DenseMatrix {
         for (j in 0 until cols) {
           ret[i, j] = r.nextDouble()
         }
+      }
+
+      return ret
+    }
+
+    @TestDone
+    fun eye(n: Int): DenseMatrix {
+      val ret = DenseMatrix(n, n)
+      for (i in 0 until n) {
+        ret[i, i] = 1
+      }
+
+      return ret
+    }
+
+    @TestDone
+    fun eye(rows: Int, cols: Int): DenseMatrix {
+      val ret = DenseMatrix(rows, cols)
+      for (i in 0 until Math.min(rows, cols)) {
+        ret[i, i] = 1
+      }
+
+      return ret
+    }
+
+    @TestDone
+    fun eye(size: MatrixSize): DenseMatrix {
+      return eye(size.rows, size.cols)
+    }
+
+    @TestYet
+    fun diag(vs: DoubleArray): DenseMatrix {
+      val len = vs.size
+      val ret = DenseMatrix(len, len)
+      (0 until len).forEach { i ->
+        ret[i, i] = vs[i]
       }
 
       return ret
@@ -60,7 +100,7 @@ class DenseMatrix {
   }
 
   @TestYet
-  operator fun get(rows: IntRange, cols: IntRange): DenseMatrix {
+  operator fun get(rows: Collection<Int>, cols: Collection<Int>): DenseMatrix {
     val ret = DenseMatrix(rows.count(), cols.count())
     for (i in 0 until ret.size.rows) {
       for (j in 0 until ret.size.cols) {
@@ -69,6 +109,11 @@ class DenseMatrix {
     }
 
     return ret
+  }
+
+  @TestYet
+  operator fun get(rows: IntRange, cols: IntRange): DenseMatrix {
+    return this[rows.toList(), cols.toList()]
   }
 
   @TestYet
@@ -106,8 +151,29 @@ class DenseMatrix {
 
   @TestYet
   operator fun set(i: Int, j: Int, value: Int): Unit {
-    checkIndexRange(i, j)
-    mat[i + j * size.rows] = value.toDouble()
+    this[i, j] = value.toDouble()
+  }
+
+  @TestYet
+  operator fun set(rc: RC, index: Int, values: DoubleArray): Unit {
+    when (rc) {
+      RC.Row -> {
+        require(size.cols == values.size, {
+
+        })
+        for (j in 0 until size.cols) {
+          this[index, j] = values[j]
+        }
+      }
+      RC.Column -> {
+        require(size.rows == values.size, {
+
+        })
+        for (i in 0 until size.rows) {
+          this[i, index] = values[i]
+        }
+      }
+    }
   }
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   // Matrix operator overload
@@ -180,7 +246,7 @@ class DenseMatrix {
     val sb = StringBuilder()
     (0 until size.rows).forEach { i ->
       (0 until size.cols).forEach { j ->
-        sb += this[i, j]
+        sb += "%.3f".format(this[i, j])
         if (j != size.cols - 1) {
           sb += delimiter
         }
@@ -194,7 +260,7 @@ class DenseMatrix {
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   // math operation
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  @TestYet
+  @TestDone
   operator fun unaryMinus(): DenseMatrix {
     return this * -1
   }
@@ -353,6 +419,7 @@ class DenseMatrix {
     }
   }
 
+  @TestYet
   fun divByElement(another: DenseMatrix): DenseMatrix {
     checkSize(size, another.size, Operator.Same)
 
@@ -369,7 +436,7 @@ class DenseMatrix {
   // math operation
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  @TestYet
+  @TestDone
   fun transpose(): DenseMatrix {
     val ret = DenseMatrix(size.cols, size.rows)
 
@@ -383,30 +450,81 @@ class DenseMatrix {
   }
 
   @TestDone
-  fun det(): Double {
-    require(size.isSquare(), {
-      "This matrix should be square, but actually ${size.rows} x ${size.cols}"
-    })
-
-    val n = size.rows
-    val copy = this.copy()
-    var buf: Double
-
-    for (i in 0 until n) {
-      for (j in 0 until n) {
-        if (i < j) {
-          buf = copy[j, i] / copy[i, i]
-          for (k in 0 until n) {
-            copy[j, k] -= (copy[i, k] * buf)
-          }
-        }
-      }
+  fun solve(B: DenseMatrix): DenseMatrix? {
+    return if (size.isSquare()) {
+      LUDecomposition(this).solve(B)
+    } else {
+      QRDecomposition(this).solve(B)
     }
-
-    val det = (0 until n).map { copy[it, it] }.reduce { d1, d2 -> d1 * d2 }
-    return det
   }
-  fun inv(): DenseMatrix {
-    return this
+
+  @TestYet
+  fun evd(): EigenValueDecomposition {
+    return EigenValueDecomposition(this)
+  }
+
+  @TestDone
+  fun det(): Double {
+    return LUDecomposition(this).det()
+  }
+
+  @TestDone
+  fun inv(): DenseMatrix? {
+    return this.solve(DenseMatrix.eye(size.rows, size.rows))
+  }
+
+  @TestDone
+  fun trace(): Double {
+    return (0 until Math.min(size.rows, size.cols)).map { i ->
+      this[i, i]
+    }.sum()
+  }
+
+  /**
+   * 1ノルム
+   * 列sumの最大値
+   */
+  @TestDone
+  fun norm1(): Double {
+    val max = (0 until size.cols).map { j ->
+      this[RC.Column, j].sum()
+    }.max()
+
+    return requireNotNull(max)
+  }
+
+  /**
+   * 2ノルム
+   * 最大特異値
+   */
+  @TestDone
+  fun norm2(): Double {
+    return SingularValueDecomposition(this).norm2()
+  }
+
+  /**
+   * 無限ノルム
+   * 行sumの最大値
+   */
+  @TestDone
+  fun normInf(): Double {
+    val max = (0 until size.rows).map { i ->
+      this[RC.Row, i].sum()
+    }.max()
+
+    return requireNotNull(max)
+  }
+
+  /**
+   * フロベニウスノルム
+   */
+  @TestDone
+  fun normF(): Double {
+    return Math.sqrt(mat.map { it * it }.sum())
+  }
+
+  @TestDone
+  fun rank(): Int {
+    return SingularValueDecomposition(this).rank()
   }
 }

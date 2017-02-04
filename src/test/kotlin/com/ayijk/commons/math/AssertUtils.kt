@@ -26,6 +26,10 @@ object AssertUtils {
     Assert.assertEquals(castToBigDecimal(expected), castToBigDecimal(actual))
   }
 
+  fun assertEquals(expected: Number, actual: Number, delta: Double): Unit {
+    Assert.assertEquals(expected.toDouble(), actual.toDouble(), delta)
+  }
+
   fun <T> assertEquals(expected: T, actual: T): Unit {
     Assert.assertEquals(expected, actual)
   }
@@ -42,15 +46,15 @@ object AssertUtils {
     Assert.assertArrayEquals(expected, actual.array2Copy())
   }
 
-  fun assertEquals(expected: DenseMatrix, actual: DenseMatrix) {
-    Assert.assertArrayEquals(expected.arrayCopy().toTypedArray(), actual.arrayCopy().toTypedArray())
+  fun assertEquals(expected: DenseMatrix?, actual: DenseMatrix) {
+    Assert.assertArrayEquals(expected?.arrayCopy()?.toTypedArray(), actual.arrayCopy().toTypedArray())
   }
 
-  fun assertEquals(expected: DenseMatrix, actual: Matrix) {
-    Assert.assertArrayEquals(expected.array2Copy(), actual.arrayCopy)
+  fun assertEquals(expected: DenseMatrix?, actual: Matrix?) {
+    Assert.assertArrayEquals(expected?.array2Copy(), actual?.arrayCopy)
   }
 
-  fun assertEquals(expected: Matrix, actual: DenseMatrix) {
-    Assert.assertArrayEquals(expected.arrayCopy, actual.array2Copy())
+  fun assertEquals(expected: Matrix?, actual: DenseMatrix?) {
+    Assert.assertArrayEquals(expected?.arrayCopy, actual?.array2Copy())
   }
 }

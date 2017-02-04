@@ -18,4 +18,8 @@ data class MatrixSize(val rows: Int, val cols: Int) : Iterable<Pair<Int, Int>> {
 
     return iterator(buffer.toTypedArray())
   }
+
+  fun isSquare(): Boolean {
+    return rows == cols
+  }
 }
