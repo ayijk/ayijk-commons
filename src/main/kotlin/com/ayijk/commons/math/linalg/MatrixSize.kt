@@ -22,4 +22,12 @@ data class MatrixSize(val rows: Int, val cols: Int) : Iterable<Pair<Int, Int>> {
   fun isSquare(): Boolean {
     return rows == cols
   }
+
+  fun isVector(): Boolean {
+    return rows == 1 || cols == 1
+  }
+
+  fun isScalar(): Boolean {
+    return rows == 1 && cols == 1
+  }
 }

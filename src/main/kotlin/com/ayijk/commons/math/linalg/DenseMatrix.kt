@@ -1,9 +1,6 @@
 package com.ayijk.commons.math.linalg
 
-import com.ayijk.commons.math.linalg.dec.EigenValueDecomposition
-import com.ayijk.commons.math.linalg.dec.LUDecomposition
-import com.ayijk.commons.math.linalg.dec.QRDecomposition
-import com.ayijk.commons.math.linalg.dec.SingularValueDecomposition
+import com.ayijk.commons.math.linalg.dec.*
 import com.ayijk.commons.test.TestDone
 import com.ayijk.commons.test.TestYet
 import com.ayijk.commons.util.plusAssign
@@ -83,9 +80,6 @@ class DenseMatrix {
     }
   }
 
-  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  // Matrix operator overload
-  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   private fun checkIndexRange(i: Int, j: Int) {
     require(i >= 0 && i < size.rows, {
       "dimension error. 'i' should be in [0, ${size.rows - 1}], but actually is $i."
@@ -95,10 +89,48 @@ class DenseMatrix {
     })
   }
 
-  enum class RC {
-    Row, Column,
+  val size: MatrixSize
+  private val mat: DoubleArray
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // Constructors
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  constructor(rows: Int, cols: Int) {
+    this.size = MatrixSize(rows, cols)
+    this.mat = DoubleArray(size.dim)
   }
 
+  constructor(size: MatrixSize) {
+    this.size = size
+    this.mat = DoubleArray(size.dim)
+  }
+
+  constructor(values: DoubleArray, rows: Int) {
+    this.size = MatrixSize(rows, values.size / rows)
+    this.mat = DoubleArray(size.dim)
+    for (i in 0 until values.size) {
+      this.mat[i] = values[i]
+    }
+  }
+
+  constructor(values: Array<out Double>, rows: Int) : this(values.toDoubleArray(), rows)
+
+  constructor(data: Array<out DoubleArray>) {
+    this.size = MatrixSize(data.size, data.first().size)
+    this.mat = DoubleArray(size.dim)
+    for (i in 0 until size.rows) {
+      for (j in 0 until size.cols) {
+        this[i, j] = data[i][j]
+      }
+    }
+  }
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // Constructors
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // getter / setter
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   @TestYet
   operator fun get(rows: Collection<Int>, cols: Collection<Int>): DenseMatrix {
     val ret = DenseMatrix(rows.count(), cols.count())
@@ -120,6 +152,10 @@ class DenseMatrix {
   operator fun get(i: Int, j: Int): Double {
     checkIndexRange(i, j)
     return mat[i + j * size.rows]
+  }
+
+  enum class RC {
+    Row, Column,
   }
 
   @TestYet
@@ -176,11 +212,8 @@ class DenseMatrix {
     }
   }
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  // Matrix operator overload
+  // getter / setter
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-  val size: MatrixSize
-  private val mat: DoubleArray
 
   @TestDone
   fun arrayCopy(): DoubleArray {
@@ -197,36 +230,6 @@ class DenseMatrix {
     }
 
     return ret
-  }
-
-  constructor(rows: Int, cols: Int) {
-    this.size = MatrixSize(rows, cols)
-    this.mat = DoubleArray(size.dim)
-  }
-
-  constructor(size: MatrixSize) {
-    this.size = size
-    this.mat = DoubleArray(size.dim)
-  }
-
-  constructor(values: DoubleArray, rows: Int) {
-    this.size = MatrixSize(rows, values.size / rows)
-    this.mat = DoubleArray(size.dim)
-    for (i in 0 until values.size) {
-      this.mat[i] = values[i]
-    }
-  }
-
-  constructor(values: Array<out Double>, rows: Int) : this(values.toDoubleArray(), rows)
-
-  constructor(data: Array<out DoubleArray>) {
-    this.size = MatrixSize(data.size, data.first().size)
-    this.mat = DoubleArray(size.dim)
-    for (i in 0 until size.rows) {
-      for (j in 0 until size.cols) {
-        this[i, j] = data[i][j]
-      }
-    }
   }
 
   @TestDone
@@ -258,7 +261,7 @@ class DenseMatrix {
   }
 
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  // math operation
+  // Math operations
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   @TestDone
   operator fun unaryMinus(): DenseMatrix {
@@ -433,10 +436,12 @@ class DenseMatrix {
     return ret
   }
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  // math operation
+  // Math operations
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  // functional
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // Functional methods
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   fun exists(predicate: (Int, Int, Double) -> Boolean): Boolean {
     return this.count(predicate) > 0
   }
@@ -479,15 +484,58 @@ class DenseMatrix {
 
     return ret
   }
-  //
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // Functional methods
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // Size validation
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  fun isSquare(): Boolean {
+    return size.isSquare()
+  }
 
   fun isVector(): Boolean {
-    return size.rows == 1 || size.cols == 1
+    return size.isVector()
   }
 
   fun isScalar(): Boolean {
-    return size.rows == 1 && size.cols == 1
+    return size.isScalar()
   }
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // Size validation
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // Decomposition
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  @TestYet
+  fun cd(): CholeskyDecomposition {
+    return CholeskyDecomposition(this)
+  }
+
+  @TestYet
+  fun evd(): EigenValueDecomposition {
+    return EigenValueDecomposition(this)
+  }
+
+  @TestYet
+  fun lud(): LUDecomposition {
+    return LUDecomposition(this)
+  }
+
+  @TestYet
+  fun qrd(): QRDecomposition {
+    return QRDecomposition(this)
+  }
+
+  @TestYet
+  fun svd(): SingularValueDecomposition {
+    return SingularValueDecomposition(this)
+  }
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // Decomposition
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   @TestDone
   fun transpose(): DenseMatrix {
@@ -504,16 +552,11 @@ class DenseMatrix {
 
   @TestDone
   fun solve(B: DenseMatrix): DenseMatrix? {
-    return if (size.isSquare()) {
+    return if (isSquare()) {
       LUDecomposition(this).solve(B)
     } else {
       QRDecomposition(this).solve(B)
     }
-  }
-
-  @TestYet
-  fun evd(): EigenValueDecomposition {
-    return EigenValueDecomposition(this)
   }
 
   @TestDone
@@ -533,6 +576,14 @@ class DenseMatrix {
     }.sum()
   }
 
+  @TestDone
+  fun rank(): Int {
+    return SingularValueDecomposition(this).rank()
+  }
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // Matrix norm
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   /**
    * 1ノルム
    * 列sumの最大値
@@ -575,9 +626,7 @@ class DenseMatrix {
   fun normF(): Double {
     return Math.sqrt(mat.map { it * it }.sum())
   }
-
-  @TestDone
-  fun rank(): Int {
-    return SingularValueDecomposition(this).rank()
-  }
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // Matrix norm
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
