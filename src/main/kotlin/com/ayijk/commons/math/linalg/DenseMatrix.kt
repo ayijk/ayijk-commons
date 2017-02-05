@@ -436,6 +436,59 @@ class DenseMatrix {
   // math operation
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+  // functional
+  fun exists(predicate: (Int, Int, Double) -> Boolean): Boolean {
+    return this.count(predicate) > 0
+  }
+
+  fun count(predicate: (Int, Int, Double) -> Boolean): Int {
+    return size.map { it ->
+      val i = it.first
+      val j = it.second
+      val v = this[i, j]
+      if (predicate.invoke(i, j, v)) {
+        1
+      } else {
+        0
+      }
+    }.sum()
+  }
+
+  fun filter(predicate: (Int, Int, Double) -> Boolean): List<Triple<Int, Int, Double>> {
+    val ret = arrayListOf<Triple<Int, Int, Double>>()
+    size.forEach {
+      val i = it.first
+      val j = it.second
+      val v = this[i, j]
+      if (predicate(i, j, v)) {
+        ret += Triple(i, j, v)
+      }
+    }
+
+    return ret
+  }
+
+  fun map(transform: (Int, Int, Double) -> Double): DenseMatrix {
+    val ret = this.copy()
+    ret.size.forEach {
+      val i = it.first
+      val j = it.second
+      val v = this[i, j]
+      ret[i, j] = transform(i, j, v)
+    }
+
+    return ret
+  }
+  //
+
+  fun isVector(): Boolean {
+    return size.rows == 1 || size.cols == 1
+  }
+
+  fun isScalar(): Boolean {
+    return size.rows == 1 && size.cols == 1
+  }
+
   @TestDone
   fun transpose(): DenseMatrix {
     val ret = DenseMatrix(size.cols, size.rows)

@@ -2,10 +2,8 @@ package com.ayijk.commons.math.linalg
 
 import Jama.Matrix
 import com.ayijk.commons.math.AssertUtils.assertEquals
-import com.ayijk.commons.math.EPS
 import com.ayijk.commons.math.Maths
 import org.junit.Test
-import java.util.*
 
 /**
  * Created by ayijk on 2017/01/29.
