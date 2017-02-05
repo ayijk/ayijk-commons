@@ -10,6 +10,19 @@ import java.math.BigInteger
  */
 object Maths {
   val EPS = 2 * Maths.pow(10, -52)
+
+  fun arsinh(x: Double): Double {
+    return Math.log(x + Math.sqrt(x * x + 1.0))
+  }
+
+  fun arcosh(x: Double): Double {
+    return Math.log(x + Math.sqrt(x * x - 1.0))
+  }
+
+  fun artanh(x: Double): Double {
+    return 0.5 * (Math.log(1.0 + x) - Math.log(1.0 - x))
+  }
+
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   // pow
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
