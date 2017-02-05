@@ -12,6 +12,9 @@ object SpecialNumbers {
 
   @TestDone
   tailrec fun fact(n: Int, f: BigInteger = BigInteger.ONE): BigInteger {
+    require(n >= 0, {
+    })
+    
     return when (n) {
       0 -> f
       else -> fact(n - 1, n * f)
