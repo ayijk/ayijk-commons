@@ -4,11 +4,13 @@ package com.ayijk.commons.math.gen
  * Created by ayijk on 2017/02/05.
  */
 class DirichletDistribution(alphas: DoubleArray) : MultiVariateGenerative {
-
   val alphas: DoubleArray
   val dim = alphas.size
 
   init {
+    require(alphas.none { it < 0 }, {
+    })
+
     val sum = alphas.sum()
     this.alphas = alphas.map { it / sum }.toDoubleArray()
   }
