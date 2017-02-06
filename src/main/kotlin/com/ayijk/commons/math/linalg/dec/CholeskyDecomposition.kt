@@ -9,4 +9,8 @@ import com.ayijk.commons.math.linalg.DenseMatrix
  */
 class CholeskyDecomposition(mat: DenseMatrix) {
   private val cd = CholeskyDecomposition(Matrix(mat.array2Copy()))
+
+  fun getL(): DenseMatrix {
+    return DenseMatrix(cd.l.array)
+  }
 }
